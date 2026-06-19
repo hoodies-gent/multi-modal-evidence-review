@@ -7,3 +7,58 @@
 - **Eval consumes a predictions CSV; it does NOT run the VLM** / Alt: eval directly drives the system end-to-end / Reason: decoupling keeps the scorer deterministic, zero-cost, and repeatable; it can score any predictions file (enabling the README-required ">=2 strategy" comparison by feeding multiple pred files against one truth), and system outputs can be cached/reused.
 - **Free-text fields not auto-scored in v1 (`*_reason`, `claim_status_justification`)** / Alt: LLM-judge now / Reason: LLM judging adds cost, nondeterminism, and build time; v1 focuses the signal on the structured fields (headline = `claim_status` accuracy). A pluggable hook is left so an LLM-judge can be added later without reworking the framework.
 - **Predicted<->expected join key = `image_paths`** / Alt: `user_id` / Reason: `user_id` repeats across rows in the test set (e.g. user_004/018/034/040/041/042/045 appear multiple times) so it is not unique; each `image_paths` maps to a unique case directory, making it the stable alignment key.
+- **Modality = pure VLM first, add thin deterministic CV helpers on demand** / Alt: train/fine-tune specialized vision models; fully separate vision-tools + text-LLM (LLM never sees pixels) / Reason: the core judgment is grounding visual evidence against the claim's part/issue/severity, which requires joint vision+language reasoning (VLM's strength) and has no off-the-shelf model matching the 12-issue x per-object-part taxonomy. Rejected fine-tuning (only 20 labeled rows, 24h — infeasible). Rejected fully-separate pipeline (intermediate text labels are an information bottleneck for mismatch/severity cases). Start pure VLM (simplest), then add cheap deterministic CV (Laplacian blur->blurry_image, exposure->low_light_or_glare, OCR->text_instruction_present + untrusted-text feed, EXIF->non_original_image) only where eval shows a bottleneck and where determinism is wanted ("Deterministic where possible").
+- **Control flow = fixed pipeline (static DAG), NOT ReAct / agentic tool-loop** / Alt: ReAct reason-act-observe loop / Reason: every claim's steps are known and fixed (extract claim -> visual check -> join history -> fuse), so no dynamic planning is needed. Pipeline gives reproducible, countable model calls (serves "Deterministic where possible" + the operational-analysis cost report), is parallelizable across the 44 independent claims, maps stages to fields for single-variable debugging, and minimizes the injection attack surface (the agent takes no consequential actions, only emits structured data). A bounded validate-and-repair retry is allowed (still pipeline, not ReAct).
+- **Model behind a `VLMClient` abstraction; skeleton built against a `StubVLMClient`** / Alt: hardcode one vendor/model into the pipeline / Reason: model selection then does not block skeleton work, the whole pipeline is testable end-to-end with a deterministic stub (no API/cost), and swapping clients gives the README-required ">=2 model/strategy" comparison for free. Concrete model choice + current pricing deferred to when the real client is wired (pin via the API reference, not from memory).
+- **Cache key includes `model_id` + `prompt_version`** (plus prompt-text hash + image set) / Alt: key on image set + prompt only / Reason: without model_id in the key, switching models would silently reuse another model's cached responses and contaminate experiments; per-(model,prompt) caches keep runs comparable and make model switches clean.
+- **Every run emits run-metadata; experiments stay single-variable and resumable** / Alt: keep only the predictions CSV / Reason: tagging each run with model_id, prompt_version, call/cache counts, timing, timestamp, git commit makes results traceable and feeds the operational analysis. Combined with the single-variable rule (change only model OR prompt between two logged runs) and a resumable cache (rate-limit hits leave completed cells cached; resume completes the run), this prevents "half model A / half model B" dirty data when limits or model changes occur.
+- **Integration via a native per-vendor SDK client, NOT an OpenAI-compatible gateway** / Alt: OpenAI-compatible gateway (OpenRouter etc.) / Reason: native SDKs expose three efficiency/accounting levers that gateways typically drop or degrade — prompt caching (cache reads ~0.1x input price on the large stable system+vocab prefix reused across all 44/85 calls), a Batch API (~50% off; the test set is not latency-sensitive), and precise per-call usage fields (cache read/write token breakdown). At this scale absolute cost is cents, so the deciding factor is the SCORED operational-analysis section (it asks us to demonstrate batching/caching/cost) plus accurate accounting for `evaluation_report.md`, which native gives cleanly; a gateway also risks markup. **Scope: this fixes only the integration STYLE (native vs gateway). The concrete vendor (Anthropic / OpenAI / other) and model are still OPEN.** Whichever vendor is chosen later, implement its single native client class behind the existing `VLMClient` interface.
+- **Develop on the ship-tier model throughout; model choice is an eval-driven variable** / Alt: phased "weak model during dev, switch to the best only at the end" (cost-saving) / Reason: at this scale a full run is cents and the disk cache (keyed by model_id+prompt_version) makes repeated iteration ~free, so the cost premise behind phasing evaporates. A weak dev model confounds the signal — bottleneck misattribution (model-ceiling errors look like prompt bugs), over-fitting scaffolding the ship model won't need, and inability to tell prompt-ceiling from model-ceiling; and a blind late switch ships output.csv on a model the prompt was never tuned against (can regress). Instead: pick the model empirically via an early sweep (held-constant prompt), develop on that ship-tier model, and re-confirm/lock with a late sweep on the tuned prompt; if the final model differs, do a short re-tune rather than a blind switch.
+- **README "≥2 configurations" = compare any of strategy / prompt / model (an OR, a floor); architecture decisions are judged single-variable on the FIXED model** / Alt: design a multi-model grid to drive architecture decisions / Reason: the requirement is satisfied automatically — every single-variable iteration in experiment_log.md is a 2-config comparison (floor vs MVP, prompt v1 vs v2, arch A vs B). Architecture upgrades must be judged holding the model fixed (clean attribution; and we develop on the ship model anyway, so that is the right place to judge them). Reserve multi-model comparison for two narrow purposes only: (1) model selection (early + late sweep), (2) an optional end-of-project generalization check (does the tuned system's advantage hold across models — good for the report/AI-Judge, not for steering architecture). Avoid a model x prompt x architecture grid (combinatorial, confounded); default to changing one axis at a time.
+- **Core VLM = Gemini (native SDK); DeepSeek is not a VLM -> not usable for the core** / Alt: set up Anthropic/OpenAI now; use DeepSeek / Reason: the task is vision-first (images are the source of truth), so the core model must accept image input. Of the two keys the user has set up right now, only Gemini is a native multimodal VLM; DeepSeek's API is text-only (its DeepSeek-VL weights are not on the platform API), so it cannot do the visual judgment. Gemini is fully sufficient for this task, so no need to set up another vendor. DeepSeek is kept as an OPTIONAL text-only secondary role (e.g. candidate-B stage-1 claim extraction, or a text-side comparison point) — not introduced in the MVP. This resolves the previously-open vendor slot to Gemini *given current resources*; if another vendor is set up later it can be added to the model sweep.
+
+---
+
+## Current planned architecture (reflects the decisions above)
+
+MVP = candidate A (single VLM call does extraction + visual judgment). Target =
+candidate B (two-stage decoupled). A's prompt becomes B's stage [2], so the
+evolution wastes little. The eval framework is already built and is decoupled
+(it consumes the output CSV; it does not run the VLM).
+
+```
+INPUTS (dataset/)                       SHARED
+  claims.csv ─────────┐                 code/schema.py
+  user_history.csv ──┐│                   (14-col order + allowed values;
+  evidence_req.csv ─┐││                    imported by BOTH system & eval)
+  images/ ────────┐ │││
+                  ▼ ▼▼▼
+            ┌──────────────┐   ╔════════ PER-CLAIM PIPELINE (static DAG) ════════╗
+            │ Loader/join  │──►║ [1] claim extraction                            ║
+            │ +img resolver│   ║      MVP(A): folded into the single VLM call    ║
+            └──────────────┘   ║      B   : cheap text-only LLM → target         ║
+                               ║            {object,part,issue,severity,multi[]} ║
+            ┌──────────────┐   ║                      │                          ║
+            │ Cache        │◄─►║ [2] VLM visual assessment (all row images)      ║
+            │ key = imgset │   ║      issue? part visible? quality?              ║
+            │   + promptver│   ║      authenticity? in-image text?               ║
+            └──────────────┘   ║          │                                      ║
+                               ║   (opt) deterministic CV helpers ─┐ (on demand) ║
+            ┌──────────────┐   ║     blur / exposure / OCR / EXIF  │             ║
+            │ user_history │──►║ [3] history join ◄────────────────┘             ║
+            └──────────────┘   ║      (risk context only, never overrides pixels)║
+                               ║          │                                      ║
+                               ║ [4] fusion + schema clamp (rule layer)          ║
+                               ║      + bounded validate-and-repair retry        ║
+                               ╚══════════════════════╪══════════════════════════╝
+                                                      ▼
+                                                  output.csv
+                                                      │
+                                                      ▼
+                            ┌──────────────────────────────────────────┐
+                            │ EVAL FRAMEWORK  (code/evaluation/, built) │
+                            │ validate schema + score vs sample truth   │
+                            │ → report.json / markdown + per-case diff  │
+                            └──────────────────────────────────────────┘
+```
+
