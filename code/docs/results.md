@@ -7,6 +7,7 @@ Headline = `claim_status` accuracy. Set fields (`risk_flags`, `supporting_image_
 | Config | **claim_status** | evidence_standard_met | risk_flags | issue_type | object_part | supporting_image_ids | valid_image | severity | n |
 |---|---|---|---|---|---|---|---|---|---|
 | trivial-floor | 60 | 85 | 0 | 15 | 5 | 0 | 90 | 15 | 20 |
+| gemini-3.5-flash · v4 (t0) | 85 | 85 | 73 | 50 | 90 | 82 | 95 | 55 | 20 |
 | gemini-2.5-flash · v1 | 75 | 75 | 61 | 40 | 80 | 73 | 85 | 20 | 20 |
 | gemini-2.5-flash · v2 | 75 | 80 | 74 | 35 | 80 | 76 | 80 | 45 | 20 |
 | gemini-2.5-pro · v2 | 75 | 75 | 75 | 40 | 70 | 73 | 85 | 45 | 20 |
