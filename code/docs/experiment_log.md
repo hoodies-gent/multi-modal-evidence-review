@@ -37,3 +37,14 @@
 - **Decisions:** (1) Made `main.py` resilient — per-claim try/except writes a schema-valid conservative row on API failure and keeps cached successes, so one 429 no longer nukes the whole batch (verified with stub). (2) User is enabling **billing (paid tier)** to remove the quota blocker (total volume is cents). Re-run EXP-003 once paid tier is live.
 - **Re-run (paid tier live, gemini-2.5-flash, prompt v2, sample n=20):** **claim_status 75% (unchanged vs v1)**. **severity 20% -> 45% (+25)**, **risk_flags F1 60.7% -> 74.2% (+13.5)**, supporting_image_ids F1 72.7% -> 76.5%, evidence_standard_met 75% -> 80%; object_part 80% (flat); valid_image 85% -> 80% (1-case noise); **issue_type 40% -> 35% (-5)**. 19 live calls, 0 failures, 0 validation issues.
 - **Decision:** Keep prompt v2 (net win — big severity + risk_flags gains; -5s are 1-case noise). issue_type did NOT improve from definitions -> confusable types (crack vs glass_shatter) have a perceptual component; defer to the later model sweep or a different disambiguation approach. Next targets: issue_type and the adversarial `contradicted` cases that cap claim_status. Paid tier confirmed; use `--min-interval 0.5`.
+
+## EXP-004 — Model sweep at prompt v2 (sample n=20): flash vs pro vs 3.5-flash
+
+- **Hypothesis:** With the prompt now decent (v2), a model sweep picks the ship model and answers whether issue_type's weakness is model-bound (perceptual) or prompt-bound.
+- **Change:** Same prompt v2; ran gemini-2.5-flash / -2.5-pro / -3.5-flash. See `results.md` (auto-generated scoreboard).
+- **Result (claim_status | issue_type | severity | object_part):**
+  - gemini-2.5-flash: **75** | 35 | 45 | 80
+  - gemini-2.5-pro:   **75** | 40 | 45 | 70
+  - gemini-3.5-flash: **65** | **50** | **60** | **90**
+- **Findings:** (1) **pro gives no benefit over flash** — same headline 75, worse object_part, marginal elsewhere; not worth its cost/latency. (2) **issue_type IS model-sensitive** (35->40->50) — confirms it's partly perceptual, not just prompt. (3) **3.5-flash trade-off:** best on perception fields (issue_type 50, object_part 90, severity 60) but WORST on the headline claim_status (65 vs 75). Flat 8-field average: 3.5-flash 68.7 ≈ flash 68.2 > pro 67.2.
+- **Decision:** Drop pro. Keep gemini-2.5-flash as the dev model for now (best on the headline decision). 3.5-flash is a strong candidate IF its claim_status drop is recoverable — investigate why its headline is lower (its `contradicted`/NEI calls) next; if fixable, it likely becomes the ship model (keeps the perception edge). Model choice stays OPEN between flash and 3.5-flash.
