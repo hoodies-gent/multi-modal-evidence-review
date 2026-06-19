@@ -75,3 +75,18 @@ AGENTS.md §5), unless the user explicitly asks.
 Only the `code/` directory is zipped into `code.zip`. Anything the AI Judge
 should see (planning, decisions, experiments, README, eval report) must live
 under `code/`. Repo-root files (CLAUDE.md, AGENTS.md) are not submitted.
+
+## 7. Prompt versioning discipline
+
+`PROMPT_VERSION` lives in `code/prompts.py` and is part of the cache key.
+The version number must only be bumped on **confirmed-effective** prompt
+changes — never on an untested attempt.
+
+1. Experiment on a branch (e.g. `exp/my-change`). Do NOT bump PROMPT_VERSION.
+2. Run experiment → score against sample truth.
+3. If scores improve → merge to main, bump PROMPT_VERSION in the same commit.
+   If scores regress or are flat → discard the branch; the version number is
+   NOT consumed.
+4. Version numbers are monotonic and meaningful: every version in main's
+   history represents an adopted improvement. Gaps (e.g. v5 skipped after a
+   regression) are acceptable — jump to the next integer.
