@@ -85,10 +85,10 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser(description="Run claim-verification pipeline -> output.csv")
     p.add_argument("--input", default=os.path.join(_DATASET_DIR, "claims.csv"))
     p.add_argument("--output", default=os.path.join(_REPO_ROOT, "output.csv"))
-    p.add_argument("--client", default="stub", choices=["stub", "gemini"])
-    p.add_argument("--model-id", default=None, help="exact model id for the gemini client")
-    p.add_argument("--min-interval", type=float, default=13.0,
-                   help="min seconds between gemini calls (free tier ~13; paid can be ~0)")
+    p.add_argument("--client", default="gemini", choices=["stub", "gemini"])
+    p.add_argument("--model-id", default="gemini-3.5-flash", help="exact model id for the gemini client")
+    p.add_argument("--min-interval", type=float, default=0.5,
+                   help="min seconds between gemini calls (paid ~0.5; free tier needs ~13)")
     p.add_argument("--limit", type=int, default=None, help="process only the first N rows")
     p.add_argument("--no-cache", action="store_true")
     args = p.parse_args(argv)
