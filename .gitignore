@@ -1,0 +1,32 @@
+# --- Python ---------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Virtual environments -------------------------------------------------
+.venv/
+venv/
+env/
+ENV/
+
+# --- Secrets / environment (AGENTS.md: never commit secrets) --------------
+.env
+.env.*
+!.env.example
+
+# --- Local caches & generated artifacts -----------------------------------
+# VLM response cache (keyed by image-set + prompt-version) and scratch outputs.
+.cache/
+code/.cache/
+*.local.*
+
+# --- OS / editor cruft ----------------------------------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
