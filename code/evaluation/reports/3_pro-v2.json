@@ -1,0 +1,531 @@
+{
+  "summary": {
+    "n_pairs": 20,
+    "headline_field": "claim_status",
+    "headline_accuracy": 0.75
+  },
+  "alignment": {
+    "pairs_scored": 20,
+    "predictions_without_truth": 0,
+    "truth_without_predictions": [],
+    "duplicate_keys": []
+  },
+  "validation": {
+    "n_issues": 0,
+    "issues": []
+  },
+  "fields": {
+    "evidence_standard_met": {
+      "kind": "scalar",
+      "n": 20,
+      "correct": 15,
+      "accuracy": 0.75,
+      "confusion": {
+        "false|false": 3,
+        "true|false": 5,
+        "true|true": 12
+      },
+      "errors": [
+        [
+          "images/sample/case_003/img_1.jpg;images/sample/case_003/img_2.jpg",
+          "true",
+          "false"
+        ],
+        [
+          "images/sample/case_005/img_1.jpg;images/sample/case_005/img_2.jpg",
+          "true",
+          "false"
+        ],
+        [
+          "images/sample/case_010/img_1.jpg;images/sample/case_010/img_2.jpg",
+          "true",
+          "false"
+        ],
+        [
+          "images/sample/case_016/img_1.jpg;images/sample/case_016/img_2.jpg",
+          "true",
+          "false"
+        ],
+        [
+          "images/sample/case_019/img_1.jpg",
+          "true",
+          "false"
+        ]
+      ]
+    },
+    "risk_flags": {
+      "kind": "set",
+      "n": 20,
+      "micro_precision": 0.6857142857142857,
+      "micro_recall": 0.8275862068965517,
+      "micro_f1": 0.75,
+      "macro_f1": 0.7959523809523809,
+      "exact_match_accuracy": 0.55,
+      "errors": [
+        [
+          "images/sample/case_001/img_1.jpg",
+          [],
+          [
+            "claim_mismatch",
+            "manual_review_required"
+          ]
+        ],
+        [
+          "images/sample/case_002/img_1.jpg;images/sample/case_002/img_2.jpg",
+          [
+            "claim_mismatch",
+            "manual_review_required",
+            "wrong_object"
+          ],
+          [
+            "claim_mismatch",
+            "manual_review_required"
+          ]
+        ],
+        [
+          "images/sample/case_006/img_1.jpg",
+          [
+            "damage_not_visible",
+            "wrong_angle"
+          ],
+          [
+            "damage_not_visible",
+            "manual_review_required",
+            "non_original_image",
+            "wrong_angle"
+          ]
+        ],
+        [
+          "images/sample/case_007/img_1.jpg;images/sample/case_007/img_2.jpg",
+          [
+            "blurry_image"
+          ],
+          [
+            "blurry_image",
+            "claim_mismatch",
+            "manual_review_required"
+          ]
+        ],
+        [
+          "images/sample/case_008/img_1.jpg",
+          [
+            "claim_mismatch",
+            "manual_review_required",
+            "non_original_image",
+            "user_history_risk"
+          ],
+          [
+            "claim_mismatch",
+            "manual_review_required",
+            "user_history_risk"
+          ]
+        ],
+        [
+          "images/sample/case_012/img_1.jpg;images/sample/case_012/img_2.jpg",
+          [],
+          [
+            "manual_review_required",
+            "user_history_risk"
+          ]
+        ],
+        [
+          "images/sample/case_014/img_1.jpg",
+          [
+            "damage_not_visible",
+            "manual_review_required",
+            "user_history_risk"
+          ],
+          [
+            "claim_mismatch",
+            "manual_review_required",
+            "user_history_risk"
+          ]
+        ],
+        [
+          "images/sample/case_018/img_1.jpg;images/sample/case_018/img_2.jpg",
+          [
+            "cropped_or_obstructed",
+            "damage_not_visible",
+            "manual_review_required"
+          ],
+          [
+            "cropped_or_obstructed",
+            "manual_review_required",
+            "non_original_image",
+            "user_history_risk"
+          ]
+        ],
+        [
+          "images/sample/case_020/img_1.jpg;images/sample/case_020/img_2.jpg",
+          [
+            "damage_not_visible",
+            "manual_review_required",
+            "text_instruction_present",
+            "user_history_risk"
+          ],
+          [
+            "manual_review_required",
+            "text_instruction_present",
+            "user_history_risk"
+          ]
+        ]
+      ]
+    },
+    "issue_type": {
+      "kind": "scalar",
+      "n": 20,
+      "correct": 8,
+      "accuracy": 0.4,
+      "confusion": {
+        "broken_part|broken_part": 2,
+        "broken_part|crack": 1,
+        "broken_part|unknown": 1,
+        "crack|glass_shatter": 2,
+        "crack|unknown": 1,
+        "crushed_packaging|crushed_packaging": 1,
+        "dent|broken_part": 1,
+        "dent|dent": 2,
+        "none|scratch": 1,
+        "none|torn_packaging": 1,
+        "scratch|none": 1,
+        "stain|water_damage": 1,
+        "torn_packaging|unknown": 1,
+        "unknown|dent": 1,
+        "unknown|unknown": 2,
+        "water_damage|water_damage": 1
+      },
+      "errors": [
+        [
+          "images/sample/case_001/img_1.jpg",
+          "dent",
+          "broken_part"
+        ],
+        [
+          "images/sample/case_003/img_1.jpg;images/sample/case_003/img_2.jpg",
+          "crack",
+          "unknown"
+        ],
+        [
+          "images/sample/case_004/img_1.jpg",
+          "broken_part",
+          "crack"
+        ],
+        [
+          "images/sample/case_005/img_1.jpg;images/sample/case_005/img_2.jpg",
+          "scratch",
+          "none"
+        ],
+        [
+          "images/sample/case_009/img_1.jpg",
+          "crack",
+          "glass_shatter"
+        ],
+        [
+          "images/sample/case_010/img_1.jpg;images/sample/case_010/img_2.jpg",
+          "broken_part",
+          "unknown"
+        ],
+        [
+          "images/sample/case_011/img_1.jpg",
+          "stain",
+          "water_damage"
+        ],
+        [
+          "images/sample/case_013/img_1.jpg",
+          "crack",
+          "glass_shatter"
+        ],
+        [
+          "images/sample/case_014/img_1.jpg",
+          "none",
+          "scratch"
+        ],
+        [
+          "images/sample/case_016/img_1.jpg;images/sample/case_016/img_2.jpg",
+          "torn_packaging",
+          "unknown"
+        ],
+        [
+          "images/sample/case_019/img_1.jpg",
+          "unknown",
+          "dent"
+        ],
+        [
+          "images/sample/case_020/img_1.jpg;images/sample/case_020/img_2.jpg",
+          "none",
+          "torn_packaging"
+        ]
+      ]
+    },
+    "object_part": {
+      "kind": "scalar",
+      "n": 20,
+      "correct": 14,
+      "accuracy": 0.7,
+      "confusion": {
+        "contents|contents": 1,
+        "corner|corner": 1,
+        "door|door": 1,
+        "front_bumper|body": 1,
+        "front_bumper|front_bumper": 1,
+        "headlight|headlight": 1,
+        "hinge|unknown": 1,
+        "keyboard|keyboard": 1,
+        "package_corner|package_corner": 1,
+        "package_side|package_corner": 1,
+        "rear_bumper|rear_bumper": 2,
+        "screen|screen": 2,
+        "seal|seal": 1,
+        "seal|unknown": 1,
+        "side_mirror|side_mirror": 1,
+        "trackpad|trackpad": 1,
+        "unknown|item": 1,
+        "windshield|unknown": 1
+      },
+      "errors": [
+        [
+          "images/sample/case_003/img_1.jpg;images/sample/case_003/img_2.jpg",
+          "windshield",
+          "unknown"
+        ],
+        [
+          "images/sample/case_008/img_1.jpg",
+          "front_bumper",
+          "body"
+        ],
+        [
+          "images/sample/case_010/img_1.jpg;images/sample/case_010/img_2.jpg",
+          "hinge",
+          "unknown"
+        ],
+        [
+          "images/sample/case_016/img_1.jpg;images/sample/case_016/img_2.jpg",
+          "seal",
+          "unknown"
+        ],
+        [
+          "images/sample/case_017/img_1.jpg",
+          "package_side",
+          "package_corner"
+        ],
+        [
+          "images/sample/case_019/img_1.jpg",
+          "unknown",
+          "item"
+        ]
+      ]
+    },
+    "claim_status": {
+      "kind": "scalar",
+      "n": 20,
+      "correct": 15,
+      "accuracy": 0.75,
+      "confusion": {
+        "contradicted|contradicted": 4,
+        "contradicted|supported": 1,
+        "not_enough_information|contradicted": 1,
+        "not_enough_information|not_enough_information": 2,
+        "supported|not_enough_information": 3,
+        "supported|supported": 9
+      },
+      "errors": [
+        [
+          "images/sample/case_002/img_1.jpg;images/sample/case_002/img_2.jpg",
+          "not_enough_information",
+          "contradicted"
+        ],
+        [
+          "images/sample/case_003/img_1.jpg;images/sample/case_003/img_2.jpg",
+          "supported",
+          "not_enough_information"
+        ],
+        [
+          "images/sample/case_010/img_1.jpg;images/sample/case_010/img_2.jpg",
+          "supported",
+          "not_enough_information"
+        ],
+        [
+          "images/sample/case_016/img_1.jpg;images/sample/case_016/img_2.jpg",
+          "supported",
+          "not_enough_information"
+        ],
+        [
+          "images/sample/case_020/img_1.jpg;images/sample/case_020/img_2.jpg",
+          "contradicted",
+          "supported"
+        ]
+      ]
+    },
+    "supporting_image_ids": {
+      "kind": "set",
+      "n": 20,
+      "micro_precision": 0.9230769230769231,
+      "micro_recall": 0.6,
+      "micro_f1": 0.7272727272727274,
+      "macro_f1": 0.6833333333333333,
+      "exact_match_accuracy": 0.65,
+      "errors": [
+        [
+          "images/sample/case_002/img_1.jpg;images/sample/case_002/img_2.jpg",
+          [
+            "img_1",
+            "img_2"
+          ],
+          []
+        ],
+        [
+          "images/sample/case_003/img_1.jpg;images/sample/case_003/img_2.jpg",
+          [
+            "img_1"
+          ],
+          []
+        ],
+        [
+          "images/sample/case_005/img_1.jpg;images/sample/case_005/img_2.jpg",
+          [
+            "img_1"
+          ],
+          [
+            "img_2"
+          ]
+        ],
+        [
+          "images/sample/case_010/img_1.jpg;images/sample/case_010/img_2.jpg",
+          [
+            "img_1"
+          ],
+          []
+        ],
+        [
+          "images/sample/case_016/img_1.jpg;images/sample/case_016/img_2.jpg",
+          [
+            "img_1"
+          ],
+          []
+        ],
+        [
+          "images/sample/case_019/img_1.jpg",
+          [
+            "img_1"
+          ],
+          []
+        ],
+        [
+          "images/sample/case_020/img_1.jpg;images/sample/case_020/img_2.jpg",
+          [
+            "img_1",
+            "img_2"
+          ],
+          [
+            "img_1"
+          ]
+        ]
+      ]
+    },
+    "valid_image": {
+      "kind": "scalar",
+      "n": 20,
+      "correct": 17,
+      "accuracy": 0.85,
+      "confusion": {
+        "false|true": 2,
+        "true|false": 1,
+        "true|true": 17
+      },
+      "errors": [
+        [
+          "images/sample/case_002/img_1.jpg;images/sample/case_002/img_2.jpg",
+          "true",
+          "false"
+        ],
+        [
+          "images/sample/case_008/img_1.jpg",
+          "false",
+          "true"
+        ],
+        [
+          "images/sample/case_018/img_1.jpg;images/sample/case_018/img_2.jpg",
+          "false",
+          "true"
+        ]
+      ]
+    },
+    "severity": {
+      "kind": "scalar",
+      "n": 20,
+      "correct": 9,
+      "accuracy": 0.45,
+      "confusion": {
+        "high|high": 1,
+        "low|low": 1,
+        "low|medium": 1,
+        "low|none": 1,
+        "medium|high": 3,
+        "medium|medium": 5,
+        "medium|unknown": 3,
+        "none|low": 1,
+        "none|medium": 1,
+        "unknown|medium": 1,
+        "unknown|unknown": 2
+      },
+      "errors": [
+        [
+          "images/sample/case_001/img_1.jpg",
+          "medium",
+          "high"
+        ],
+        [
+          "images/sample/case_002/img_1.jpg;images/sample/case_002/img_2.jpg",
+          "unknown",
+          "medium"
+        ],
+        [
+          "images/sample/case_003/img_1.jpg;images/sample/case_003/img_2.jpg",
+          "medium",
+          "unknown"
+        ],
+        [
+          "images/sample/case_005/img_1.jpg;images/sample/case_005/img_2.jpg",
+          "low",
+          "none"
+        ],
+        [
+          "images/sample/case_009/img_1.jpg",
+          "medium",
+          "high"
+        ],
+        [
+          "images/sample/case_010/img_1.jpg;images/sample/case_010/img_2.jpg",
+          "medium",
+          "unknown"
+        ],
+        [
+          "images/sample/case_013/img_1.jpg",
+          "medium",
+          "high"
+        ],
+        [
+          "images/sample/case_014/img_1.jpg",
+          "none",
+          "low"
+        ],
+        [
+          "images/sample/case_016/img_1.jpg;images/sample/case_016/img_2.jpg",
+          "medium",
+          "unknown"
+        ],
+        [
+          "images/sample/case_019/img_1.jpg",
+          "low",
+          "medium"
+        ],
+        [
+          "images/sample/case_020/img_1.jpg;images/sample/case_020/img_2.jpg",
+          "none",
+          "medium"
+        ]
+      ]
+    }
+  },
+  "tag": "gemini-2.5-pro · v2"
+}

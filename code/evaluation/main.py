@@ -35,6 +35,7 @@ def main(argv=None) -> int:
     p.add_argument("--truth", help="ground-truth CSV (e.g. dataset/sample_claims.csv)")
     p.add_argument("--validate-only", action="store_true", help="schema/contract validation only")
     p.add_argument("--json", help="write the machine-readable report here")
+    p.add_argument("--tag", help="config label embedded in the report (e.g. 'gemini-2.5-flash·v2')")
     p.add_argument("--md", help="write the markdown report here")
     args = p.parse_args(argv)
 
@@ -56,6 +57,8 @@ def main(argv=None) -> int:
     alignment = loader.align(pred_rows, truth_rows)
     score_result = scorers.score_all(alignment.pairs)
     rep = report.build_report(score_result, issues, alignment)
+    if args.tag:
+        rep["tag"] = args.tag
     md = report.to_markdown(rep, score_result)
 
     print(md)
