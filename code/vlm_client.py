@@ -110,7 +110,9 @@ class GeminiVLMClient(VLMClient):
             contents.append(types.Part.from_text(text=f"Image id: {_image_id(path)}"))
             contents.append(types.Part.from_bytes(data=data, mime_type=_mime_for(path)))
 
-        config = types.GenerateContentConfig(response_mime_type="application/json")
+        # temperature=0 for reproducibility ("deterministic where possible") and clean A/B —
+        # without it Gemini samples stochastically and per-run noise swamps small deltas.
+        config = types.GenerateContentConfig(temperature=0.0, response_mime_type="application/json")
 
         last_exc = None
         for attempt in range(self.max_retries + 1):
