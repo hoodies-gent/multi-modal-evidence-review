@@ -27,3 +27,11 @@
   - risk_flags: over-triggers `text_instruction_present` (case_014/015) and misses `manual_review_required`.
 - **Operational:** Free tier `gemini-2.5-flash` = **5 RPM** — first run 429'd after ~5 calls. Added a 13s proactive throttle + 429-aware backoff (honours server retryDelay) + resumable cache; full 20-claim run then completed in ~485s (16 live calls + 4 cache hits). Cost ~cents. This RPM/throttle/cache behaviour feeds the operational-analysis report.
 - **Decision:** Floor cleared. Before prompt iteration, finish the model sweep (gemini-2.5-pro, optionally gemini-3.5-flash) to pick the development model; then iterate prompt v1->v2 targeting severity + issue_type.
+
+## EXP-003 — prompt v2 (severity rubric + issue_type disambiguation + risk_flags tightening): QUOTA-BLOCKED
+
+- **Hypothesis:** Defining severity levels, disambiguating confusable issue_types, and tightening text_instruction_present / manual_review_required lifts severity (20%) and issue_type (40%) without a model change.
+- **Change:** prompts.py v1->v2 (added `_DEFINITIONS`). Ran gemini-2.5-flash on sample.
+- **Result:** NO RESULT — all 20 v2 calls hit the free-tier **daily** cap (`GenerateRequestsPerDayPerProjectPerModel-FreeTier`, **20/day** for gemini-2.5-flash), already spent by EXP-002. Run aborted with no output.
+- **Operational finding (for the report):** gemini-2.5-flash free tier = 5 RPM AND **20 requests/day**, per model. The daily quota resets at midnight Pacific (~07:00 UTC), which is AFTER the challenge deadline (05:30 UTC) — so waiting for reset is not viable. Free tier cannot support iteration + a 44-row test run in time.
+- **Decisions:** (1) Made `main.py` resilient — per-claim try/except writes a schema-valid conservative row on API failure and keeps cached successes, so one 429 no longer nukes the whole batch (verified with stub). (2) User is enabling **billing (paid tier)** to remove the quota blocker (total volume is cents). Re-run EXP-003 once paid tier is live.
