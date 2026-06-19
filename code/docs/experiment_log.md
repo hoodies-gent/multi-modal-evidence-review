@@ -16,3 +16,14 @@
 - **Change:** Built `code/{schema,vlm_client,cache,prompts,pipeline,main}.py`. Ran `main.py` on `sample_claims.csv` with the offline `StubVLMClient`, then scored via the eval framework.
 - **Result:** 20/20 rows written, **0 validation issues** (clamp guarantees schema-valid output). Stub returns a conservative verdict (`not_enough_information`/`unknown`), scoring claim_status 15% (= the 3 NEI cases) and valid_image 90% — i.e. wiring is correct, not a real baseline. Re-run gave **20 cache hits / 0 api calls**, confirming the cache (keyed by model_id+prompt_version+prompt+image-set). run-metadata JSON emitted (model, prompt_version, counts, timing, git commit).
 - **Decision:** Plumbing solid. The trivial floor (EXP-000, 60%) remains the bar. Next: wire a real Claude vision client (model selection) and run the first true VLM baseline at prompt v1.
+
+## EXP-002 — First real VLM baseline: gemini-2.5-flash, prompt v1, sample (n=20)
+
+- **Hypothesis:** A real VLM at prompt v1 clears the 60% trivial floor, proving vision adds value, and exposes the real per-field bottlenecks.
+- **Change:** Implemented `GeminiVLMClient` (native google-genai). Ran on sample with `gemini-2.5-flash`.
+- **Result:** **claim_status 75%** (> 60% floor). Per-field: object_part 80%, valid_image 85%, supporting_image_ids F1 72.7%, evidence_standard_met 75%, risk_flags F1 60.7%, issue_type 40%, **severity 20%**. 0 parse failures, 0 validation issues.
+  - claim_status errors concentrate on the adversarial `contradicted` cases (case_008 watermark, case_020 seal-text, case_014 damage-not-visible) — model is too cautious there (flips to not_enough_information) or over-trusts the claim.
+  - **Biggest bottlenecks:** severity (20% — systematically over-rates, medium->high repeatedly) and issue_type (40% — semantic confusions: crack<->glass_shatter, stain<->water_damage). Both look prompt-fixable (define severity levels; disambiguate issue types).
+  - risk_flags: over-triggers `text_instruction_present` (case_014/015) and misses `manual_review_required`.
+- **Operational:** Free tier `gemini-2.5-flash` = **5 RPM** — first run 429'd after ~5 calls. Added a 13s proactive throttle + 429-aware backoff (honours server retryDelay) + resumable cache; full 20-claim run then completed in ~485s (16 live calls + 4 cache hits). Cost ~cents. This RPM/throttle/cache behaviour feeds the operational-analysis report.
+- **Decision:** Floor cleared. Before prompt iteration, finish the model sweep (gemini-2.5-pro, optionally gemini-3.5-flash) to pick the development model; then iterate prompt v1->v2 targeting severity + issue_type.

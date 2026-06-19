@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 from typing import List
 
@@ -64,6 +65,12 @@ def _image_id(path: str) -> str:
     return os.path.splitext(os.path.basename(path))[0]
 
 
+def _retry_delay_from(message: str):
+    """Best-effort parse of the server's suggested retry delay (seconds) from a 429."""
+    m = re.search(r"retry in ([\d.]+)s", message) or re.search(r"retryDelay'?:?\s*'?(\d+)s", message)
+    return float(m.group(1)) if m else None
+
+
 class GeminiVLMClient(VLMClient):
     """Native Google Gemini client (multimodal). Reads GEMINI_API_KEY (or
     GOOGLE_API_KEY) from the env per AGENTS.md.
@@ -76,11 +83,16 @@ class GeminiVLMClient(VLMClient):
     pass it explicitly — naming changes over time, so no default is hardcoded.
     """
 
-    def __init__(self, model_id: str, max_retries: int = 2):
+    def __init__(self, model_id: str, max_retries: int = 5, min_interval_s: float = 13.0):
         if not model_id:
             raise ValueError("GeminiVLMClient requires an explicit model_id (e.g. a gemini-*-flash / -pro id)")
         self.model_id = model_id
         self.max_retries = max_retries
+        # Proactive throttle: stay under the free-tier limit (gemini-2.5-flash = 5 RPM,
+        # i.e. >=12s/req); 13s leaves a small margin. Combined with the on-disk cache,
+        # a run is resumable — completed claims are cached, so a re-run only fills gaps.
+        self.min_interval_s = min_interval_s
+        self._last_call = 0.0
         # Lazy import so stub/eval paths don't require the package.
         from google import genai
         from google.genai import types
@@ -102,16 +114,26 @@ class GeminiVLMClient(VLMClient):
 
         last_exc = None
         for attempt in range(self.max_retries + 1):
+            self._throttle()
             try:
                 resp = self._client.models.generate_content(
                     model=self.model_id, contents=contents, config=config,
                 )
+                self._last_call = time.monotonic()
                 return resp.text or ""
-            except Exception as e:  # transient (rate limit / 5xx); backoff and retry
+            except Exception as e:  # transient (429 rate limit / 5xx): backoff and retry
                 last_exc = e
+                self._last_call = time.monotonic()
                 if attempt < self.max_retries:
-                    time.sleep(2 ** attempt)
+                    # Honour the server's suggested retry delay on a 429; else exp backoff.
+                    delay = _retry_delay_from(str(e))
+                    time.sleep((delay if delay is not None else 2 ** attempt) + 1.0)
         raise last_exc
+
+    def _throttle(self) -> None:
+        wait = self.min_interval_s - (time.monotonic() - self._last_call)
+        if wait > 0:
+            time.sleep(wait)
 
 
 def get_client(name: str = "stub", model_id: str | None = None) -> VLMClient:
