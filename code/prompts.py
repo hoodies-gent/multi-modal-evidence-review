@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import schema
 
-PROMPT_VERSION = "v2"
+PROMPT_VERSION = "v3"
 
 _ALLOWED = f"""ALLOWED VALUES (use the closest match; never invent values):
 - claim_status: {sorted(schema.CLAIM_STATUS)}
@@ -40,6 +40,12 @@ SECURITY (critical):
 """
 
 _DEFINITIONS = """FIELD GUIDANCE:
+
+claim_status -- decide from the IMAGES:
+- supported: the claimed issue is actually VISIBLE on the claimed part/area. If you can see the claimed damage, the verdict is supported -- even if it looks minor, and regardless of user history.
+- contradicted: the images CONFLICT with the claim -- the claimed part is visible and undamaged, shows a clearly different or lesser issue than claimed, or shows a different object/vehicle than claimed. Use contradicted ONLY when the evidence actively disagrees, never merely because you are unsure.
+- not_enough_information: the claimed part/issue CANNOT be assessed (not shown, too blurry/cropped/obstructed, or the relevant area is missing). Uncertainty maps here -- NOT to contradicted.
+Do not downgrade a clearly-visible claimed issue to contradicted or not_enough_information.
 
 severity (of the ACTUAL visible damage relevant to the claimed part):
 - none: the relevant part is visible and shows no real damage.

@@ -11,3 +11,5 @@ Headline = `claim_status` accuracy. Set fields (`risk_flags`, `supporting_image_
 | gemini-2.5-flash · v2 | 75 | 80 | 74 | 35 | 80 | 76 | 80 | 45 | 20 |
 | gemini-2.5-pro · v2 | 75 | 75 | 75 | 40 | 70 | 73 | 85 | 45 | 20 |
 | gemini-3.5-flash · v2 | 65 | 70 | 69 | 50 | 90 | 71 | 75 | 60 | 20 |
+| gemini-2.5-flash · v3 | 75 | 80 | 62 | 40 | 85 | 80 | 85 | 50 | 20 |
+| gemini-3.5-flash · v3 | 70 | 75 | 68 | 55 | 90 | 69 | 80 | 70 | 20 |
