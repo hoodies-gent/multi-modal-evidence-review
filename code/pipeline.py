@@ -14,7 +14,7 @@ from typing import List, Optional, Tuple
 
 import schema
 from cache import Cache
-from prompts import PROMPT_VERSION, build_prompt
+from prompts import PROMPT_VERSION, build_prompt, build_verify_prompt
 from vlm_client import VLMClient
 
 DECISION_FIELDS = [
@@ -98,6 +98,7 @@ def process_row(
     cache: Cache,
     abs_image_paths: List[str],
     max_repair: int = 1,
+    verify: bool = False,
 ) -> Tuple[dict, dict]:
     """Return (output_row, stats). stats = {cache_hit, api_calls, parse_ok}."""
     prompt = build_prompt(row, history_row, evidence_rows)
@@ -128,6 +129,23 @@ def process_row(
         cache.set(key, response, meta={"model_id": client.model_id, "prompt_version": PROMPT_VERSION})
 
     decision = clamp(parsed, row)
+
+    # Fix 1: claim-blind grounding pass — only when the main verdict is `supported`
+    # (over-support is the bottleneck; verifying contradicted/NEI would waste calls).
+    if verify and decision["claim_status"] == "supported" and decision["issue_type"] not in ("none", "unknown"):
+        vprompt = build_verify_prompt(row.get("claim_object", ""), decision["object_part"], decision["issue_type"])
+        vkey = Cache.make_key(client.model_id, PROMPT_VERSION + "|verify", vprompt, rel_paths)
+        vresp = cache.get(vkey)
+        if vresp is None:
+            vresp = client.analyze(vprompt, abs_image_paths)
+            stats["api_calls"] += 1
+            cache.set(vkey, vresp, meta={"model_id": client.model_id, "stage": "verify"})
+        vis = str((_extract_json(vresp) or {}).get("visibility", "")).strip().lower()
+        if vis == "not_visible":
+            decision["claim_status"] = "contradicted"
+        elif vis == "cannot_tell":
+            decision["claim_status"] = "not_enough_information"
+
     out = {col: row.get(col, "") for col in schema.INPUT_COLUMNS}
     out.update(decision)
     return {col: out.get(col, "") for col in schema.OUTPUT_COLUMNS}, stats

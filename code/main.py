@@ -91,6 +91,8 @@ def main(argv=None) -> int:
                    help="min seconds between gemini calls (paid ~0.5; free tier needs ~13)")
     p.add_argument("--limit", type=int, default=None, help="process only the first N rows")
     p.add_argument("--no-cache", action="store_true")
+    p.add_argument("--verify", action="store_true",
+                   help="Fix 1: claim-blind grounding pass on `supported` verdicts")
     args = p.parse_args(argv)
 
     rows = _read_csv(args.input)
@@ -111,7 +113,7 @@ def main(argv=None) -> int:
         try:
             out_row, stats = process_row(
                 row, history.get(row.get("user_id")), ev, client, cache,
-                _abs_image_paths(row.get("image_paths", "")),
+                _abs_image_paths(row.get("image_paths", "")), verify=args.verify,
             )
             totals["cache_hits"] += int(stats["cache_hit"])
             totals["api_calls"] += stats["api_calls"]
@@ -133,6 +135,7 @@ def main(argv=None) -> int:
         "model_id": client.model_id,
         "client": args.client,
         "prompt_version": PROMPT_VERSION,
+        "verify": args.verify,
         "git_commit": _git_commit(),
         "input": os.path.relpath(args.input, _REPO_ROOT),
         "n_images": sum(len(_abs_image_paths(r.get("image_paths", ""))) for r in rows),
