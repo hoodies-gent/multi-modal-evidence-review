@@ -87,6 +87,8 @@ def main(argv=None) -> int:
     p.add_argument("--output", default=os.path.join(_REPO_ROOT, "output.csv"))
     p.add_argument("--client", default="stub", choices=["stub", "gemini"])
     p.add_argument("--model-id", default=None, help="exact model id for the gemini client")
+    p.add_argument("--min-interval", type=float, default=13.0,
+                   help="min seconds between gemini calls (free tier ~13; paid can be ~0)")
     p.add_argument("--limit", type=int, default=None, help="process only the first N rows")
     p.add_argument("--no-cache", action="store_true")
     args = p.parse_args(argv)
@@ -97,7 +99,7 @@ def main(argv=None) -> int:
     history = _index_history(_read_csv(os.path.join(_DATASET_DIR, "user_history.csv")))
     evidence = _index_evidence(_read_csv(os.path.join(_DATASET_DIR, "evidence_requirements.csv")))
 
-    client = get_client(args.client, args.model_id)
+    client = get_client(args.client, args.model_id, min_interval_s=args.min_interval)
     cache = Cache(enabled=not args.no_cache)
 
     totals = {"rows": 0, "cache_hits": 0, "api_calls": 0, "parse_failures": 0, "errors": 0}

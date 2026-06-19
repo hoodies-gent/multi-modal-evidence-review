@@ -136,10 +136,11 @@ class GeminiVLMClient(VLMClient):
             time.sleep(wait)
 
 
-def get_client(name: str = "stub", model_id: str | None = None) -> VLMClient:
+def get_client(name: str = "stub", model_id: str | None = None,
+               min_interval_s: float = 13.0) -> VLMClient:
     """Factory so main.py can select a client by CLI flag."""
     if name == "stub":
         return StubVLMClient()
     if name == "gemini":
-        return GeminiVLMClient(model_id=model_id or "")
+        return GeminiVLMClient(model_id=model_id or "", min_interval_s=min_interval_s)
     raise ValueError(f"unknown client {name!r}")
