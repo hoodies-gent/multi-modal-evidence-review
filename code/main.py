@@ -25,7 +25,7 @@ import time
 import schema
 from cache import Cache
 from prompts import PROMPT_VERSION
-from pipeline import process_row
+from pipeline import process_row, conservative_row
 from vlm_client import get_client
 
 _CODE_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -100,20 +100,26 @@ def main(argv=None) -> int:
     client = get_client(args.client, args.model_id)
     cache = Cache(enabled=not args.no_cache)
 
-    totals = {"rows": 0, "cache_hits": 0, "api_calls": 0, "parse_failures": 0}
+    totals = {"rows": 0, "cache_hits": 0, "api_calls": 0, "parse_failures": 0, "errors": 0}
     out_rows = []
     t0 = time.time()
     for row in rows:
         ev = evidence.get((row.get("claim_object") or "").strip().lower(), [])
-        out_row, stats = process_row(
-            row, history.get(row.get("user_id")), ev, client, cache,
-            _abs_image_paths(row.get("image_paths", "")),
-        )
-        out_rows.append(out_row)
         totals["rows"] += 1
-        totals["cache_hits"] += int(stats["cache_hit"])
-        totals["api_calls"] += stats["api_calls"]
-        totals["parse_failures"] += int(not stats["parse_ok"])
+        try:
+            out_row, stats = process_row(
+                row, history.get(row.get("user_id")), ev, client, cache,
+                _abs_image_paths(row.get("image_paths", "")),
+            )
+            totals["cache_hits"] += int(stats["cache_hit"])
+            totals["api_calls"] += stats["api_calls"]
+            totals["parse_failures"] += int(not stats["parse_ok"])
+        except Exception as e:  # API failure (e.g. quota): don't abort the batch
+            out_row = conservative_row(row)
+            totals["errors"] += 1
+            key = (row.get("image_paths") or "").split(";")[0]
+            print(f"  ! {key}: {type(e).__name__}: {str(e)[:120]} -> conservative row")
+        out_rows.append(out_row)
     elapsed = time.time() - t0
 
     with open(args.output, "w", newline="", encoding="utf-8") as f:

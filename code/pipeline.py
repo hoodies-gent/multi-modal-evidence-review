@@ -82,6 +82,14 @@ def clamp(parsed: dict, row: dict) -> dict:
     }
 
 
+def conservative_row(row: dict) -> dict:
+    """Schema-valid fallback row (passthrough inputs + clamped empty decision) for a
+    claim whose API call failed, so one failure never aborts the whole batch."""
+    out = {col: row.get(col, "") for col in schema.INPUT_COLUMNS}
+    out.update(clamp({}, row))
+    return {col: out.get(col, "") for col in schema.OUTPUT_COLUMNS}
+
+
 def process_row(
     row: dict,
     history_row: Optional[dict],
