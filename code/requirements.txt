@@ -1,0 +1,6 @@
+# Core solution dependencies.
+# The evaluation framework and the stub client use only the Python stdlib.
+# The Gemini VLM client needs the native Google GenAI SDK:
+google-genai==2.9.0
+# Loads a local .env into the environment (optional convenience; no-op if absent):
+python-dotenv==1.2.2

@@ -9,3 +9,10 @@
   - Floor (trivial): `claim_status` **60.0%** (12/20 are `supported`); evidence_standard_met 85%; valid_image 90%; issue_type 15%; object_part 5%; severity 15%; risk_flags micro-F1 0%; supporting_image_ids micro-F1 0%.
   - Sample `claim_status` distribution: supported 12, contradicted 5, not_enough_information 3.
 - **Decision:** Floor locked. The VLM MVP must clear 60% headline to justify using vision at all; the near-zero fields (risk_flags, supporting_image_ids, object_part, issue_type) are where most headroom is. Proceed to architecture/MVP.
+
+## EXP-001 — MVP skeleton wired end-to-end (StubVLMClient)
+
+- **Hypothesis:** The candidate-A pipeline (loader/join -> prompt -> client -> parse -> schema clamp -> output writer + cache + run-metadata) is correct and model-agnostic, verifiable without any API.
+- **Change:** Built `code/{schema,vlm_client,cache,prompts,pipeline,main}.py`. Ran `main.py` on `sample_claims.csv` with the offline `StubVLMClient`, then scored via the eval framework.
+- **Result:** 20/20 rows written, **0 validation issues** (clamp guarantees schema-valid output). Stub returns a conservative verdict (`not_enough_information`/`unknown`), scoring claim_status 15% (= the 3 NEI cases) and valid_image 90% — i.e. wiring is correct, not a real baseline. Re-run gave **20 cache hits / 0 api calls**, confirming the cache (keyed by model_id+prompt_version+prompt+image-set). run-metadata JSON emitted (model, prompt_version, counts, timing, git commit).
+- **Decision:** Plumbing solid. The trivial floor (EXP-000, 60%) remains the bar. Next: wire a real Claude vision client (model selection) and run the first true VLM baseline at prompt v1.
