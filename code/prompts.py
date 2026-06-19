@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import schema
 
-PROMPT_VERSION = "v4"
+PROMPT_VERSION = "v5"
 
 _ALLOWED = f"""ALLOWED VALUES (use the closest match; never invent values):
 - claim_status: {sorted(schema.CLAIM_STATUS)}
@@ -51,10 +51,10 @@ Do not downgrade a clearly-visible claimed issue to contradicted or not_enough_i
 severity (of the ACTUAL visible damage relevant to the claimed part):
 - none: the relevant part is visible and shows no real damage.
 - low: minor / cosmetic only -- a small scratch, a shallow or small dent, a light scuff or crease.
-- medium: clear, definite damage to a part -- a dent, a crack, a broken component, a stain, a crushed corner, a torn seal, visible water damage. This is the DEFAULT when real damage is clearly present.
-- high: severe, extensive, or structural damage -- major deformation, destruction across a large area or multiple components, safety-critical breakage.
+- medium: clear, definite, but LOCALIZED damage -- one dent, ONE crack (including a windshield or screen crack that has not shattered), a broken component, a stain, a crushed corner, a torn seal, or visible water damage. This is the DEFAULT when real single-area damage is present.
+- high: SEVERE or structural damage only -- shattering, deformation or destruction across a large area or MULTIPLE components, or a wrecked / caved-in part. A single crack (even on glass or a screen) is medium, NOT high.
 - unknown: severity cannot be judged (e.g. the part is not assessable / not_enough_information).
-Do NOT inflate a single clear localized issue to "high"; one dent/crack/broken part is normally "medium".
+Do NOT inflate a single localized issue to "high"; one dent / one crack / one broken part is "medium". Reserve "high" for severe, extensive, or multi-component damage.
 
 issue_type -- distinguish the confusable types:
 - dent: surface pushed in / deformed, not broken.   scratch: shallow surface line, scuff, or paint mark; no structural break.
