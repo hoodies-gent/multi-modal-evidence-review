@@ -4,10 +4,11 @@
 
 Headline = `claim_status` accuracy. Set fields (`risk_flags`, `supporting_image_ids`) are micro-F1; the rest are accuracy. All values are percentages. Narrative + decisions: `experiment_log.md`.
 
+## Pre-temperature fix (nondeterministic, ±5 noise per field; superseded)
+
 | Config | **claim_status** | evidence_standard_met | risk_flags | issue_type | object_part | supporting_image_ids | valid_image | severity | n |
 |---|---|---|---|---|---|---|---|---|---|
 | trivial-floor | 60 | 85 | 0 | 15 | 5 | 0 | 90 | 15 | 20 |
-| gemini-3.5-flash · v4 (t0) | 85 | 85 | 73 | 50 | 90 | 82 | 95 | 55 | 20 |
 | gemini-2.5-flash · v1 | 75 | 75 | 61 | 40 | 80 | 73 | 85 | 20 | 20 |
 | gemini-2.5-flash · v2 | 75 | 80 | 74 | 35 | 80 | 76 | 80 | 45 | 20 |
 | gemini-2.5-pro · v2 | 75 | 75 | 75 | 40 | 70 | 73 | 85 | 45 | 20 |
@@ -16,4 +17,10 @@ Headline = `claim_status` accuracy. Set fields (`risk_flags`, `supporting_image_
 | gemini-3.5-flash · v3 | 70 | 75 | 68 | 55 | 90 | 69 | 80 | 70 | 20 |
 | gemini-3.5-flash · v3+verify | 65 | 75 | 68 | 55 | 90 | 69 | 80 | 70 | 20 |
 | gemini-3.5-flash · v4 | 80 | 85 | 72 | 50 | 90 | 82 | 90 | 60 | 20 |
+
+## Post-temperature fix (t0, reproducible)
+
+| Config | **claim_status** | evidence_standard_met | risk_flags | issue_type | object_part | supporting_image_ids | valid_image | severity | n |
+|---|---|---|---|---|---|---|---|---|---|
 | gemini-3.5-flash · v5 (t0) | 80 | 85 | 74 | 50 | 90 | 82 | 85 | 55 | 20 |
+| gemini-3.5-flash · v4 (t0) | 85 | 85 | 73 | 50 | 90 | 82 | 95 | 55 | 20 |
