@@ -114,6 +114,20 @@ def _derive_risk_flags(decision: dict, history_row: Optional[dict]) -> None:
     decision["risk_flags"] = ";".join(ordered) if ordered else "none"
 
 
+def _derive_evidence_met(decision: dict) -> None:
+    """Coherence invariant: evidence_standard_met == (claim_status != not_enough_information).
+    Reaching a supported/contradicted verdict means the evidence WAS sufficient to evaluate;
+    not_enough_information means it was not. This holds 20/20 on the sample gold. We derive it
+    from the verdict (not the reverse) because the model's raw evidence flag is the noisier of
+    the two -- it can say "the images conflict" (a confident contradiction) while still flagging
+    evidence insufficient. MUST run before _derive_severity, which keys off evidence_standard_met.
+    Confirmed EXP-014: ev_met 85->95; trades severity 60->55 on one already-misjudged case
+    (002); removes all "contradicted + evidence-not-met" incoherence. Mutates `decision` in place."""
+    decision["evidence_standard_met"] = (
+        "true" if decision["claim_status"] != "not_enough_information" else "false"
+    )
+
+
 def _derive_severity(decision: dict) -> None:
     """Coherence invariant: severity is `unknown` whenever the claim cannot be
     assessed -- i.e. claim_status is not_enough_information OR the evidence standard
@@ -172,6 +186,7 @@ def process_row(
 
     decision = clamp(parsed, row)
     _derive_risk_flags(decision, history_row)
+    _derive_evidence_met(decision)
     _derive_severity(decision)
 
     out = {col: row.get(col, "") for col in schema.INPUT_COLUMNS}
