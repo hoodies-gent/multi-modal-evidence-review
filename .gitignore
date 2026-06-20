@@ -24,6 +24,16 @@ ENV/
 code/.cache/
 *.local.*
 
+# Scratch prediction outputs from sample-eval experiments (regenerable; never
+# committed -- the scoreboard's data source is evaluation/reports/*.json instead).
+preds_*.csv
+*.run.json
+
+# The test-set deliverable (output.csv) is submitted as a standalone file and is
+# regenerated from dataset/claims.csv; only code/ ships in code.zip, so keep it
+# out of git to avoid committing a stale copy.
+/output.csv
+
 # --- OS / editor cruft ----------------------------------------------------
 .DS_Store
 Thumbs.db
