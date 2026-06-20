@@ -114,6 +114,17 @@ def _derive_risk_flags(decision: dict, history_row: Optional[dict]) -> None:
     decision["risk_flags"] = ";".join(ordered) if ordered else "none"
 
 
+def _derive_severity(decision: dict) -> None:
+    """Coherence invariant: severity is `unknown` whenever the claim cannot be
+    assessed -- i.e. claim_status is not_enough_information OR the evidence standard
+    is not met. You cannot grade the severity of damage you couldn't evaluate. Holds
+    20/20 on sample gold; deterministically corrects the model's occasional slip
+    (EXP-013: severity 55->60, zero extra API calls). Mutates `decision` in place."""
+    
+    if decision["claim_status"] == "not_enough_information" or decision["evidence_standard_met"] == "false":
+        decision["severity"] = "unknown"
+
+
 def conservative_row(row: dict) -> dict:
     """Schema-valid fallback row (passthrough inputs + clamped empty decision) for a
     claim whose API call failed, so one failure never aborts the whole batch."""
@@ -161,6 +172,7 @@ def process_row(
 
     decision = clamp(parsed, row)
     _derive_risk_flags(decision, history_row)
+    _derive_severity(decision)
 
     out = {col: row.get(col, "") for col in schema.INPUT_COLUMNS}
     out.update(decision)
