@@ -82,6 +82,38 @@ def clamp(parsed: dict, row: dict) -> dict:
     }
 
 
+def _derive_risk_flags(decision: dict, history_row: Optional[dict]) -> None:
+    """Deterministic rule layer for the two DERIVABLE risk flags (planning.md §6).
+
+    `user_history_risk` and `manual_review_required` are functions of structured
+    inputs / already-decided fields, not independent visual judgments, so we derive
+    them deterministically instead of trusting the model -- which systematically
+    OVER-emits `manual_review_required` (EXP-012: 7 false positives on the sample).
+    Rules (validated against sample gold): user_history_risk iff the joined user
+    history carries it; manual_review_required iff the claim is contradicted, OR the
+    user has any history flag, OR a claim/object mismatch was flagged. All other
+    flags are perceptual and left exactly as the model emitted them. Mutates
+    `decision` in place. Zero extra API calls; sample risk_flags micro-F1 .73 -> .80.
+    """
+    sset = {t for t in decision["risk_flags"].split(";") if t and t != "none"}
+    sset.discard("user_history_risk")
+    sset.discard("manual_review_required")
+
+    hist_flags = set()
+    if history_row:
+        hist_flags = {t.strip().lower() for t in (history_row.get("history_flags") or "").split(";")
+                      if t.strip() and t.strip().lower() != "none"}
+
+    if "user_history_risk" in hist_flags:
+        sset.add("user_history_risk")
+    if (decision["claim_status"] == "contradicted" or hist_flags
+            or (sset & {"claim_mismatch", "wrong_object"})):
+        sset.add("manual_review_required")
+
+    ordered = [f for f in sorted(schema.RISK_FLAGS) if f in sset]
+    decision["risk_flags"] = ";".join(ordered) if ordered else "none"
+
+
 def conservative_row(row: dict) -> dict:
     """Schema-valid fallback row (passthrough inputs + clamped empty decision) for a
     claim whose API call failed, so one failure never aborts the whole batch."""
@@ -128,6 +160,7 @@ def process_row(
         cache.set(key, response, meta={"model_id": client.model_id, "prompt_version": PROMPT_VERSION})
 
     decision = clamp(parsed, row)
+    _derive_risk_flags(decision, history_row)
 
     out = {col: row.get(col, "") for col in schema.INPUT_COLUMNS}
     out.update(decision)
