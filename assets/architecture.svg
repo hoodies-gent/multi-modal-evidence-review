@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 8 1276 506" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#3d6b1f"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1276" height="520" fill="#ffffff"/>
+
+  <!-- ================= HARDENING SUBGRAPH (behind) ================= -->
+  <rect x="350" y="236" width="800" height="156" rx="9" fill="#eef7e3" stroke="#4a7a2a" stroke-width="1.5"/>
+  <text x="750" y="263" font-size="15.5" fill="#37601f" text-anchor="middle">structuring &amp; hardening (deterministic)</text>
+
+  <!-- ================= EDGES ================= -->
+  <g fill="none" stroke="#3d6b1f" stroke-width="2.2">
+    <!-- row 1 spine -->
+    <path d="M206,86 L247,86" marker-end="url(#ah)"/>
+    <path d="M410,86 L451,86" marker-end="url(#ah)"/>
+    <path d="M692,86 L733,86" marker-end="url(#ah)"/>
+    <!-- VLM <-> cache (bidirectional) -->
+    <path d="M976,86 L1096,86" marker-start="url(#ah)" marker-end="url(#ah)"/>
+    <!-- fold: VLM call -> parse JSON -->
+    <path d="M880,134 L880,198 L492,198 L492,277" marker-end="url(#ah)"/>
+    <!-- on error: VLM call -> fallback (dotted) -->
+    <path d="M830,134 L830,170 L215,170 L215,279" stroke-dasharray="3,4" marker-end="url(#ah)"/>
+    <!-- hardening spine -->
+    <path d="M602,327 L648,327" marker-end="url(#ah)"/>
+    <path d="M832,327 L878,327" marker-end="url(#ah)"/>
+    <!-- fallback -> output -->
+    <path d="M215,374 L215,458 L654,458" marker-end="url(#ah)"/>
+    <!-- rule layer -> output -->
+    <path d="M1000,374 L1000,458 L846,458" marker-end="url(#ah)"/>
+  </g>
+
+  <!-- ================= NODES ================= -->
+  <g text-anchor="middle">
+    <!-- inputs -->
+    <rect x="24" y="54" width="182" height="64" rx="32" fill="#1c2b14"/>
+    <text x="115" y="92" font-size="18" font-weight="600" fill="#ffffff">CSVs + images</text>
+
+    <!-- loader / join -->
+    <rect x="250" y="54" width="160" height="64" rx="8" fill="#f2f7ec" stroke="#4a7a2a" stroke-width="1.5"/>
+    <text x="330" y="92" font-size="18" fill="#1f3d12">loader / join</text>
+
+    <!-- build prompt -->
+    <rect x="454" y="38" width="238" height="96" rx="8" fill="#f2f7ec" stroke="#4a7a2a" stroke-width="1.5"/>
+    <text x="573" y="73" font-size="18" font-weight="600" fill="#1f3d12">build prompt</text>
+    <text x="573" y="97" font-size="15" font-style="italic" fill="#3d5226">chat &amp; in-image text</text>
+    <text x="573" y="116" font-size="15" font-style="italic" fill="#3d5226">as untrusted data</text>
+
+    <!-- single VLM call -->
+    <rect x="736" y="38" width="238" height="96" rx="8" fill="#bfe39b" stroke="#3d6b1f" stroke-width="1.5"/>
+    <text x="855" y="80" font-size="18" font-weight="600" fill="#13290a">single VLM inference</text>
+    <text x="855" y="104" font-size="15" font-style="italic" fill="#1f3d12">gemini-3.5-flash (temp=0)</text>
+
+    <!-- cache (cylinder) -->
+    <path d="M1100,60 L1100,128 A73,11 0 0 0 1246,128 L1246,60" fill="#eef2f7" stroke="#8493a5" stroke-width="1.5"/>
+    <ellipse cx="1173" cy="60" rx="73" ry="11" fill="#eef2f7" stroke="#8493a5" stroke-width="1.5"/>
+    <text x="1173" y="95" font-size="17" fill="#2a3340">cache</text>
+    <text x="1173" y="115" font-size="15" fill="#54627a">resumable</text>
+
+    <!-- parse JSON -->
+    <rect x="384" y="280" width="216" height="94" rx="8" fill="#f2f7ec" stroke="#4a7a2a" stroke-width="1.5"/>
+    <text x="492" y="319" font-size="18" font-weight="600" fill="#1f3d12">parse JSON</text>
+    <text x="492" y="341" font-size="15" font-style="italic" fill="#3d5226">repair &amp; retry</text>
+
+    <!-- clamp -->
+    <rect x="650" y="291" width="180" height="72" rx="8" fill="#f2f7ec" stroke="#4a7a2a" stroke-width="1.5"/>
+    <text x="740" y="332" font-size="18" fill="#1f3d12">clamp to schema</text>
+
+    <!-- rule layer -->
+    <rect x="880" y="280" width="240" height="94" rx="8" fill="#f2f7ec" stroke="#4a7a2a" stroke-width="1.5"/>
+    <text x="1000" y="319" font-size="18" font-weight="600" fill="#1f3d12">rule layer</text>
+    <text x="1000" y="341" font-size="15" font-style="italic" fill="#3d5226">coherence invariants</text>
+
+    <!-- fallback -->
+    <rect x="110" y="280" width="210" height="94" rx="8" fill="#f6ece9" stroke="#b58a7a" stroke-width="1.5"/>
+    <text x="215" y="319" font-size="18" fill="#3d241c">fallback row</text>
+    <text x="215" y="341" font-size="15" font-style="italic" fill="#7a5a4e">conservative, schema-valid</text>
+
+    <!-- output -->
+    <rect x="656" y="426" width="188" height="64" rx="32" fill="#1c2b14"/>
+    <text x="750" y="464" font-size="18" font-weight="600" fill="#ffffff">output.csv</text>
+  </g>
+
+  <!-- ================= EDGE LABELS (on top) ================= -->
+  <g font-size="15" fill="#3d5226" text-anchor="middle">
+    <text x="1037" y="68">lookup / store</text>
+    <rect x="392" y="154" width="72" height="19" fill="#ffffff"/>
+    <text x="428" y="168">on error</text>
+  </g>
+</svg>
